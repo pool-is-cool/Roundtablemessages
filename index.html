@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Roundtable — Live Board</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: 'Sora', Arial, Helvetica, sans-serif;
+      font-weight: 500;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 21px 35px;
+      background: #ffffff;
+      border-bottom: 1px solid #eee;
+      flex-shrink: 0;
+    }
+    header h1 { font-size: 32px; margin: 0; font-weight: 700; color: #000131; }
+    #status { font-size: 21px; color: #888; display: flex; align-items: center; gap: 10px; }
+    #dot { width: 14px; height: 14px; border-radius: 50%; background: #3ddc84; display: inline-block; }
+
+    .bodyRow { flex: 1; display: flex; min-height: 0; }
+
+    .listWrap { flex: 0 0 75%; max-width: 75%; overflow-y: auto; }
+    .list { padding: 35px; display: flex; flex-direction: column; gap: 25px; }
+    .card { border-radius: 28px; padding: 28px 32px; }
+    .card .tag {
+      font-size: 19px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+      opacity: .7; display: block; margin-bottom: 11px;
+    }
+    .card p { margin: 0; font-size: 33px; line-height: 1.4; font-weight: 500; }
+    .card-footer { display: flex; justify-content: flex-end; margin-top: 18px; }
+    .vote-btn {
+      border: none; background: rgba(255,255,255,0.85); color: #111; border-radius: 35px; padding: 14px 25px;
+      font-size: 25px; font-weight: 700; font-family: inherit; cursor: pointer; display: flex; align-items: center;
+      gap: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.15);
+    }
+    .vote-btn.voted { background: #111; color: #fff; }
+
+    .card.challenge { background: #ED99A1; color: #2a0e12; }
+    .card.experience { background: #FFFF66; color: #333300; }
+    .card.message { background: #0016C4; color: #ffffff; }
+
+    .empty { color: #999; font-size: 25px; padding: 35px; font-style: italic; text-align: center; }
+
+    .qrPanel {
+      flex: 0 0 25%; max-width: 25%; display: flex; align-items: center; justify-content: center;
+      padding: 35px; border-left: 1px solid #eee;
+    }
+    #qr { background: #fff; padding: 15px; border-radius: 20px; box-shadow: 0 2px 10px rgba(0,0,0,.15); border: 1px solid #eee; }
+    #qr img { display: block; width: 100%; max-width: 250px; height: auto; }
+    #qr span { display: block; text-align: center; font-size: 25px; font-weight: 700; color: #333; margin-top: 8px; }
+
+    /* Phone screens: this is what people vote from, not what's projected —
+       drop the QR (not needed on the device that's already open) and roughly
+       halve every size so text is readable instead of oversized. */
+    @media (max-width: 820px) {
+      header { padding: 12px 18px; }
+      header h1 { font-size: 17px; }
+      #status { font-size: 11px; gap: 6px; }
+      #dot { width: 8px; height: 8px; }
+
+      .qrPanel { display: none; }
+      .listWrap { flex: 0 0 100%; max-width: 100%; }
+
+      .list { padding: 16px; gap: 12px; }
+      .card { border-radius: 14px; padding: 14px 16px; }
+      .card .tag { font-size: 11px; margin-bottom: 6px; letter-spacing: .5px; }
+      .card p { font-size: 17px; }
+      .card-footer { margin-top: 9px; }
+      .vote-btn { border-radius: 18px; padding: 7px 13px; font-size: 13px; gap: 5px; }
+      .empty { font-size: 13px; padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Roundtable — Live Board</h1>
+    <div id="status"><span id="dot"></span><span id="statusText">connecting…</span></div>
+  </header>
+  <div class="bodyRow">
+    <div class="listWrap">
+      <div class="list" id="list"></div>
+    </div>
+    <div class="qrPanel">
+      <div id="qr">
+        <img id="qrImg" src="" alt="Scan to vote">
+        <span>Scan to vote</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Google Apps Script backend — unchanged, still the data source. Works fine
+    // called via fetch() from a different domain (already proven: this exact
+    // deployment is what Chrome on iPhone is successfully talking to right now).
+    var API_URL = 'https://script.google.com/macros/s/AKfycbyy1BBFFk2C5MpczmJSP7p6wIu2haaKT7rvEowsgMfXq4wHNTp4_YpG_1OVCyETRhm26A/exec';
+
+    // GitHub Pages URL for this repo — what the QR code points to.
+    var PAGE_URL = 'https://pool-is-cool.github.io/Roundtablemessages/';
+
+    var voted = {};
+    try { voted = JSON.parse(localStorage.getItem('votedIds') || '{}'); } catch (e) {}
+
+    var LABELS = { challenge: 'Main Challenge', experience: 'Major Experience', message: 'Message to Authorities' };
+
+    document.getElementById('qrImg').src =
+      'https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=' + encodeURIComponent(PAGE_URL);
+
+    function saveVoted() { localStorage.setItem('votedIds', JSON.stringify(voted)); }
+
+    function render(entries) {
+      var wrap = document.querySelector('.listWrap');
+      var wasAtBottom = wrap.scrollHeight - wrap.scrollTop - wrap.clientHeight < 60;
+
+      var el = document.getElementById('list');
+      el.innerHTML = '';
+      if (entries.length === 0) {
+        el.innerHTML = '<div class="empty">No answers yet…</div>';
+      }
+      entries.forEach(function (entry) {
+        var cat = LABELS[entry.category] ? entry.category : 'challenge';
+        var card = document.createElement('div');
+        card.className = 'card ' + cat;
+
+        var tag = document.createElement('span');
+        tag.className = 'tag';
+        tag.textContent = LABELS[cat] + (entry.org ? ' · ' + entry.org : '');
+        card.appendChild(tag);
+
+        var p = document.createElement('p');
+        p.textContent = entry.text;
+        card.appendChild(p);
+
+        var footer = document.createElement('div');
+        footer.className = 'card-footer';
+        var btn = document.createElement('button');
+        btn.className = 'vote-btn' + (voted[entry.id] ? ' voted' : '');
+        btn.innerHTML = '👍 ' + entry.votes;
+        btn.onclick = function () { vote(entry.id, btn); };
+        footer.appendChild(btn);
+        card.appendChild(footer);
+
+        el.appendChild(card);
+      });
+
+      if (wasAtBottom) { wrap.scrollTop = wrap.scrollHeight; }
+    }
+
+    function vote(id, btn) {
+      if (voted[id]) return;
+      voted[id] = true;
+      saveVoted();
+      btn.classList.add('voted');
+      fetch(API_URL + '?action=vote&id=' + encodeURIComponent(id))
+        .then(refresh)
+        .catch(function () {});
+    }
+
+    function refresh() {
+      fetch(API_URL + '?action=list')
+        .then(function (r) { return r.json(); })
+        .then(function (entries) {
+          render(entries);
+          document.getElementById('statusText').textContent = 'live — ' + new Date().toLocaleTimeString();
+        })
+        .catch(function () {
+          document.getElementById('statusText').textContent = 'connection issue, retrying…';
+        });
+    }
+
+    refresh();
+    setInterval(refresh, 3000);
+  </script>
+</body>
+</html>
