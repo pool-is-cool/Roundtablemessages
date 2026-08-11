@@ -41,6 +41,20 @@
     .bodyRow { flex: 1; display: flex; min-height: 0; }
 
     .listWrap { flex: 0 0 75%; max-width: 75%; overflow-y: auto; }
+
+    .legend {
+      position: sticky; top: 0; z-index: 10; background: #fff;
+      display: flex; gap: 14px; flex-wrap: wrap;
+      padding: 24px 35px 16px; border-bottom: 1px solid #eee;
+    }
+    .legend .pill {
+      font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px;
+      padding: 11px 22px; border-radius: 999px; display: inline-block;
+    }
+    .legend .pill.challenge { background: #ED99A1; color: #2a0e12; }
+    .legend .pill.experience { background: #FFFF66; color: #333300; }
+    .legend .pill.message { background: #0016C4; color: #ffffff; }
+
     .list { padding: 35px; display: flex; flex-direction: column; gap: 25px; }
     .card { border-radius: 28px; padding: 28px 32px; }
     .card .tag {
@@ -84,6 +98,9 @@
       .qrPanel { display: none; }
       .listWrap { flex: 0 0 100%; max-width: 100%; }
 
+      .legend { padding: 14px 16px 10px; gap: 8px; }
+      .legend .pill { font-size: 9px; padding: 6px 12px; letter-spacing: .5px; }
+
       .list { padding: 16px; gap: 12px; }
       .card { border-radius: 14px; padding: 14px 16px; }
       .card .tag { font-size: 11px; margin-bottom: 6px; letter-spacing: .5px; }
@@ -104,6 +121,11 @@
   </header>
   <div class="bodyRow">
     <div class="listWrap">
+      <div class="legend">
+        <span class="pill challenge">Main Challenge</span>
+        <span class="pill experience">Major Experience</span>
+        <span class="pill message">Message to Authorities</span>
+      </div>
       <div class="list" id="list"></div>
     </div>
     <div class="qrPanel">
