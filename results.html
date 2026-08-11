@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Roundtable — Results</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: 'Sora', Arial, Helvetica, sans-serif;
+      font-weight: 500;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 21px 35px;
+      background: #ffffff;
+      border-bottom: 1px solid #eee;
+      flex-shrink: 0;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    header h1 { font-size: 32px; margin: 0; font-weight: 700; color: #000131; }
+    #backLink {
+      font-size: 19px; font-weight: 700; color: #0016C4; text-decoration: none;
+      border: 2px solid #0016C4; border-radius: 30px; padding: 10px 20px;
+      display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
+    }
+    #backLink:hover { background: #0016C4; color: #fff; }
+    #status { font-size: 16px; color: #888; width: 100%; }
+
+    .cols {
+      flex: 1;
+      display: flex;
+      gap: 25px;
+      padding: 35px;
+      align-items: flex-start;
+    }
+    .col { flex: 1; min-width: 0; }
+    .col h2 {
+      font-size: 22px; font-weight: 700; margin: 0 0 18px; padding-bottom: 10px;
+      border-bottom: 3px solid; text-transform: uppercase; letter-spacing: .5px;
+    }
+    .col.challenge h2 { color: #b9424c; border-color: #ED99A1; }
+    .col.experience h2 { color: #7a7a00; border-color: #FFFF66; }
+    .col.message h2 { color: #0016C4; border-color: #0016C4; }
+
+    .cards { display: flex; flex-direction: column; gap: 18px; }
+    .card { border-radius: 22px; padding: 20px 24px; }
+    .card .org { font-size: 15px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; opacity: .7; display: block; margin-bottom: 8px; }
+    .card p { margin: 0; font-size: 22px; line-height: 1.4; font-weight: 500; }
+    .card .votes {
+      margin-top: 14px; display: flex; justify-content: flex-end; align-items: center;
+      gap: 8px; font-size: 18px; font-weight: 700; opacity: .85;
+    }
+
+    .card.challenge { background: #ED99A1; color: #2a0e12; }
+    .card.experience { background: #FFFF66; color: #333300; }
+    .card.message { background: #0016C4; color: #ffffff; }
+
+    .empty { color: #999; font-size: 18px; font-style: italic; padding: 10px 0; }
+
+    @media (max-width: 900px) {
+      .cols { flex-direction: column; padding: 20px; gap: 30px; }
+      header { padding: 16px 20px; }
+      header h1 { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Roundtable — Results</h1>
+    <a id="backLink" href="index.html">← Live board</a>
+    <div id="status"></div>
+  </header>
+
+  <div class="cols">
+    <div class="col challenge">
+      <h2>Main Challenge</h2>
+      <div class="cards" id="col-challenge"></div>
+    </div>
+    <div class="col experience">
+      <h2>Major Experience</h2>
+      <div class="cards" id="col-experience"></div>
+    </div>
+    <div class="col message">
+      <h2>Message to Authorities</h2>
+      <div class="cards" id="col-message"></div>
+    </div>
+  </div>
+
+  <script>
+    // Same Apps Script backend as the live board — read-only here, no voting.
+    var API_URL = 'https://script.google.com/macros/s/AKfycbyy1BBFFk2C5MpczmJSP7p6wIu2haaKT7rvEowsgMfXq4wHNTp4_YpG_1OVCyETRhm26A/exec';
+
+    var CATS = ['challenge', 'experience', 'message'];
+
+    function render(entries) {
+      CATS.forEach(function (cat) {
+        var items = entries
+          .filter(function (e) { return e.category === cat; })
+          .sort(function (a, b) { return b.votes - a.votes; });
+
+        var el = document.getElementById('col-' + cat);
+        el.innerHTML = '';
+        if (items.length === 0) {
+          el.innerHTML = '<div class="empty">No answers in this category.</div>';
+          return;
+        }
+        items.forEach(function (entry) {
+          var card = document.createElement('div');
+          card.className = 'card ' + cat;
+
+          var org = document.createElement('span');
+          org.className = 'org';
+          org.textContent = entry.org || '—';
+          card.appendChild(org);
+
+          var p = document.createElement('p');
+          p.textContent = entry.text;
+          card.appendChild(p);
+
+          var votes = document.createElement('div');
+          votes.className = 'votes';
+          votes.innerHTML = '👍 ' + entry.votes;
+          card.appendChild(votes);
+
+          el.appendChild(card);
+        });
+      });
+    }
+
+    function load() {
+      fetch(API_URL + '?action=list')
+        .then(function (r) { return r.json(); })
+        .then(function (entries) {
+          render(entries);
+          document.getElementById('status').textContent = 'Updated ' + new Date().toLocaleTimeString();
+        })
+        .catch(function () {
+          document.getElementById('status').textContent = 'Could not load results.';
+        });
+    }
+
+    load();
+  </script>
+</body>
+</html>
