@@ -31,11 +31,11 @@
     }
     header h1 { font-size: 32px; margin: 0; font-weight: 700; color: #000131; }
     #backLink {
-      font-size: 19px; font-weight: 700; color: #0016C4; text-decoration: none;
-      border: 2px solid #0016C4; border-radius: 30px; padding: 10px 20px;
+      font-size: 17px; font-weight: 700; color: #fff; text-decoration: none; text-transform: uppercase;
+      letter-spacing: 1px; background: #0016C4; border-radius: 999px; padding: 13px 26px;
       display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
     }
-    #backLink:hover { background: #0016C4; color: #fff; }
+    #backLink:hover { opacity: .85; }
     #status { font-size: 16px; color: #888; width: 100%; }
 
     .cols {
@@ -47,12 +47,12 @@
     }
     .col { flex: 1; min-width: 0; }
     .col h2 {
-      font-size: 22px; font-weight: 700; margin: 0 0 18px; padding-bottom: 10px;
-      border-bottom: 3px solid; text-transform: uppercase; letter-spacing: .5px;
+      font-size: 18px; font-weight: 700; margin: 0 0 18px; padding: 12px 24px;
+      border-radius: 999px; text-transform: uppercase; letter-spacing: .8px; display: inline-block;
     }
-    .col.challenge h2 { color: #b9424c; border-color: #ED99A1; }
-    .col.experience h2 { color: #7a7a00; border-color: #FFFF66; }
-    .col.message h2 { color: #0016C4; border-color: #0016C4; }
+    .col.challenge h2 { background: #ED99A1; color: #2a0e12; }
+    .col.experience h2 { background: #FFFF66; color: #333300; }
+    .col.message h2 { background: #0016C4; color: #ffffff; }
 
     .cards { display: flex; flex-direction: column; gap: 18px; }
     .card { border-radius: 22px; padding: 20px 24px; }
@@ -71,8 +71,9 @@
 
     @media (max-width: 900px) {
       .cols { flex-direction: column; padding: 20px; gap: 30px; }
-      header { padding: 16px 20px; }
+      header { padding: 14px 20px; }
       header h1 { font-size: 22px; }
+      #backLink { font-size: 10px; padding: 7px 14px; }
     }
   </style>
 </head>

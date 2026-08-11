@@ -29,6 +29,12 @@
       flex-shrink: 0;
     }
     header h1 { font-size: 32px; margin: 0; font-weight: 700; color: #000131; }
+    .headerRight { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+    #resultsLink {
+      font-size: 17px; font-weight: 700; color: #fff; text-decoration: none; text-transform: uppercase;
+      letter-spacing: 1px; background: #0016C4; border-radius: 999px; padding: 13px 26px; white-space: nowrap;
+    }
+    #resultsLink:hover { opacity: .85; }
     #status { font-size: 21px; color: #888; display: flex; align-items: center; gap: 10px; }
     #dot { width: 14px; height: 14px; border-radius: 50%; background: #3ddc84; display: inline-block; }
 
@@ -70,6 +76,8 @@
     @media (max-width: 820px) {
       header { padding: 12px 18px; }
       header h1 { font-size: 17px; }
+      .headerRight { gap: 8px; }
+      #resultsLink { font-size: 10px; padding: 7px 14px; }
       #status { font-size: 11px; gap: 6px; }
       #dot { width: 8px; height: 8px; }
 
@@ -89,7 +97,10 @@
 <body>
   <header>
     <h1>Roundtable — Live Board</h1>
-    <div id="status"><span id="dot"></span><span id="statusText">connecting…</span></div>
+    <div class="headerRight">
+      <a id="resultsLink" href="results.html">Results →</a>
+      <div id="status"><span id="dot"></span><span id="statusText">connecting…</span></div>
+    </div>
   </header>
   <div class="bodyRow">
     <div class="listWrap">
